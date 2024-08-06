@@ -43,13 +43,13 @@ def read_bytes(socket, length):
 
     return b"".join(buffer)
 
+
 def load_server_private_key():
     with open("source/auth/server_private_key.pem", "rb") as key_file:
         return serialization.load_pem_private_key(
-            key_file.read(),
-            password=None,
-            backend=default_backend()
+            key_file.read(), password=None, backend=default_backend()
         )
+
 
 def load_ca_certificate():
     with open("source/auth/cacsertificate.crt", "rb") as cert_file:
@@ -62,7 +62,7 @@ def load_server_certificate():
 
 
 def main(args):
-    port = int(args[0]) if len(args) > 0 else 4321
+    port = int(args[0]) if len(args) > 0 else 4322
     address = args[1] if len(args) > 1 else "localhost"
 
     try:
@@ -80,9 +80,9 @@ def main(args):
                             filename_len = convert_bytes_to_int(
                                 read_bytes(client_socket, 8)
                             )
-                            filename = read_bytes(
-                                client_socket, filename_len
-                            ).decode("utf-8")
+                            filename = read_bytes(client_socket, filename_len).decode(
+                                "utf-8"
+                            )
                             # print(filename)
                         case 1:
                             # If the packet is for transferring a chunk of the file
@@ -97,9 +97,7 @@ def main(args):
                             filename = "recv_" + filename.split("/")[-1]
 
                             # Write the file with 'recv_' prefix
-                            with open(
-                                f"recv_files/{filename}", mode="wb"
-                            ) as fp:
+                            with open(f"recv_files/{filename}", mode="wb") as fp:
                                 fp.write(file_data)
                             print(
                                 f"Finished receiving file in {(time.time() - start_time)}s!"
@@ -111,33 +109,43 @@ def main(args):
                             s.close()
                             break
                         case 3:
-                            auth_message_len = convert_bytes_to_int(read_bytes(client_socket, 8))
+                            auth_message_len = convert_bytes_to_int(
+                                read_bytes(client_socket, 8)
+                            )
                             auth_message = read_bytes(client_socket, auth_message_len)
 
                             server_private_key = load_server_private_key()
                             signed_auth_message = server_private_key.sign(
                                 auth_message,
-                                padding.PSS(mgf=padding.MGF1(hashes.SHA256()),salt_length=padding.PSS.MAX_LENGTH),
-                                hashes.SHA256()
+                                padding.PSS(
+                                    mgf=padding.MGF1(hashes.SHA256()),
+                                    salt_length=padding.PSS.MAX_LENGTH,
+                                ),
+                                hashes.SHA256(),
                             )
 
-                            client_socket.sendall(convert_int_to_bytes(len(signed_auth_message)))
+                            client_socket.sendall(
+                                convert_int_to_bytes(len(signed_auth_message))
+                            )
                             client_socket.sendall(signed_auth_message)
 
                             server_certificate = load_server_certificate()
-                            client_socket.sendall(convert_int_to_bytes(len(server_certificate)))
+                            client_socket.sendall(
+                                convert_int_to_bytes(len(server_certificate))
+                            )
                             client_socket.sendall(server_certificate)
-
 
     except Exception as e:
         print(e)
         s.close()
 
+
 def handler(signal_received, frame):
     # Handle any cleanup here
-    print('SIGINT or CTRL-C detected. Exiting gracefully')
+    print("SIGINT or CTRL-C detected. Exiting gracefully")
     exit(0)
-    
+
+
 if __name__ == "__main__":
     # Tell Python to run the handler() function when SIGINT is recieved
     signal(SIGINT, handler)
