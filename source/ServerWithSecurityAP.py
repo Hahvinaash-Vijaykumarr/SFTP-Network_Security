@@ -12,7 +12,10 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
+from colorama import Fore, init
 
+# Initialize colorama
+init(autoreset=True)
 
 def convert_int_to_bytes(x):
     """
@@ -37,7 +40,7 @@ def read_bytes(socket, length):
     while bytes_received < length:
         data = socket.recv(min(length - bytes_received, 1024))
         if not data:
-            raise Exception("Socket connection broken")
+            raise Exception(f"{text_color}Socket connection broken")
         buffer.append(data)
         bytes_received += len(data)
 
@@ -59,9 +62,28 @@ def load_ca_certificate():
 def load_server_certificate():
     with open("source/auth/server_signed.crt", "rb") as cert_file:
         return cert_file.read()
+    
+def get_text_color():
+    print("Please enter your preferred text color (e.g., RED, GREEN, BLUE):")
+    color = input().strip().upper()
 
+    color_map = {
+        "BLACK": Fore.BLACK,
+        "RED": Fore.RED,
+        "GREEN": Fore.GREEN,
+        "YELLOW": Fore.YELLOW,
+        "BLUE": Fore.BLUE,
+        "MAGENTA": Fore.MAGENTA,
+        "CYAN": Fore.CYAN,
+        "WHITE": Fore.WHITE
+    }
+
+    return color_map.get(color, Fore.WHITE)  # Default to WHITE if invalid color
 
 def main(args):
+    global text_color  # Declare text_color as global
+    text_color = get_text_color()  # Set text color based on user input
+
     port = int(args[0]) if len(args) > 0 else 4322
     address = args[1] if len(args) > 1 else "localhost"
 
@@ -76,7 +98,7 @@ def main(args):
                     match convert_bytes_to_int(read_bytes(client_socket, 8)):
                         case 0:
                             # If the packet is for transferring the filename
-                            print("Receiving file...")
+                            print(f"{text_color}Receiving file...")
                             filename_len = convert_bytes_to_int(
                                 read_bytes(client_socket, 8)
                             )
@@ -100,12 +122,12 @@ def main(args):
                             with open(f"recv_files/{filename}", mode="wb") as fp:
                                 fp.write(file_data)
                             print(
-                                f"Finished receiving file in {(time.time() - start_time)}s!"
+                                f"{text_color}Finished receiving file in {(time.time() - start_time)}s!"
                             )
                         case 2:
                             # Close the connection
                             # Python context used here so no need to explicitly close the socket
-                            print("Closing connection...")
+                            print(f"{text_color}Closing connection...")
                             s.close()
                             break
                         case 3:
@@ -136,13 +158,13 @@ def main(args):
                             client_socket.sendall(server_certificate)
 
     except Exception as e:
-        print(e)
+        print(f"{Fore.RED}{e}")
         s.close()
 
 
 def handler(signal_received, frame):
     # Handle any cleanup here
-    print("SIGINT or CTRL-C detected. Exiting gracefully")
+    print(f"{text_color}SIGINT or CTRL-C detected. Exiting gracefully")
     exit(0)
 
 

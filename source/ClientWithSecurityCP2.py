@@ -8,6 +8,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
 from cryptography.fernet import Fernet
+from colorama import init, Fore
 
 def convert_int_to_bytes(x):
     return x.to_bytes(8, "big")
@@ -76,23 +77,48 @@ def authentication(s):
             ),
             hashes.SHA256(),
         )
-        print("Server authentication successful")
+        print(f"{text_color}Server authentication successful{Fore.RESET}")
     except InvalidSignature:
-        print("Server authentication failed")
+        print(f"{text_color}Server authentication failed{Fore.RESET}")
         return False
 
     return True
 
+def get_text_color():
+    print("Please enter your preferred text color (e.g., RED, GREEN, BLUE):")
+    color = input().strip().upper()
+
+    color_map = {
+        "BLACK": Fore.BLACK,
+        "RED": Fore.RED,
+        "GREEN": Fore.GREEN,
+        "YELLOW": Fore.YELLOW,
+        "BLUE": Fore.BLUE,
+        "MAGENTA": Fore.MAGENTA,
+        "CYAN": Fore.CYAN,
+        "WHITE": Fore.WHITE
+    }
+
+    return color_map.get(color, Fore.WHITE)  # Default to WHITE if invalid color
+
 def main(args):
-    port = int(args[0]) if len(args) > 0 else 4324
+    
+    # Initialize colorama
+    init(autoreset=True)
+    
+    # Get text color
+    global text_color
+    text_color = get_text_color()
+    
+    port = int(args[0]) if len(args) > 0 else 4322
     server_address = args[1] if len(args) > 1 else "localhost"
 
     start_time = time.time()
 
-    print("Establishing connection to server...")
+    print(f"{text_color}Establishing connection to server...{Fore.RESET}")
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((server_address, port))
-        print("Connected")
+        print(f"{text_color}Connected{Fore.RESET}")
 
         if authentication(s):
             session_key = Fernet.generate_key()
@@ -104,14 +130,14 @@ def main(args):
             s.sendall(encrypted_session_key)  # Send encrypted session key
 
             while True:
-                filename = input("Enter a filename to send (enter -1 to exit):").strip()
+                filename = input(f"{text_color}Enter a filename to send (enter -1 to exit):{Fore.RESET}").strip()
 
-                if filename == "-1":
+                if filename == f"{text_color}-1{Fore.RESET}":
                     s.sendall(convert_int_to_bytes(2))
                     break
 
                 while not pathlib.Path(filename).is_file():
-                    filename = input("Invalid filename. Please try again:").strip()
+                    filename = input(f"{text_color}Invalid filename. Please try again:{Fore.RESET}").strip()
 
                 filename_bytes = bytes(filename, encoding="utf8")
 
@@ -121,16 +147,16 @@ def main(args):
 
                 with open(filename, mode="rb") as fp:
                     data = fp.read()
-                    print(f"Read {len(data)} bytes from {filename}")
+                    print(f"{text_color}Read {len(data)} bytes from {filename}{Fore.RESET}")
                     encrypted_data = encrypt_data_with_key(session_key, data)
                     save_encrypted_file(filename, encrypted_data)  # Save encrypted file
-                    print(f"Encrypted file saved as enc_{pathlib.Path(filename).name}")
+                    print(f"{text_color}Encrypted file saved as enc_{pathlib.Path(filename).name}{Fore.RESET}")
 
                     s.sendall(convert_int_to_bytes(1))  # Indicate data sending mode
                     s.sendall(convert_int_to_bytes(len(encrypted_data)))  # Send size of encrypted file data
                     s.sendall(encrypted_data)  # Send encrypted file data
 
-            print(f"Connection closed after {(time.time() - start_time)}s")
+            print(f"{text_color}Connection closed after {(time.time() - start_time)}s{Fore.RESET}")
 
 if __name__ == "__main__":
     main(sys.argv[1:])

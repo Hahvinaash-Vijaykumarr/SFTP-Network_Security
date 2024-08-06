@@ -8,6 +8,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
 import os
+from colorama import init, Fore
 
 def convert_int_to_bytes(x):
     """
@@ -29,7 +30,7 @@ def read_bytes(socket, length):
     while bytes_received < length:
         data = socket.recv(min(length - bytes_received, 1024))
         if not data:
-            raise Exception("Socket connection broken")
+            raise Exception(f"{text_color}Socket connection broken")
         buffer.append(data)
         bytes_received += len(data)
     return b"".join(buffer)
@@ -57,7 +58,7 @@ def save_encrypted_file(filename, data):
         file.write(data)
 
 
-def authentication(s):
+def authentication(s, text_color):
     s.sendall(convert_int_to_bytes(3))
     auth_message = b"Client Request SecureStore ID"
     s.sendall(convert_int_to_bytes(len(auth_message)))
@@ -80,35 +81,55 @@ def authentication(s):
             ),
             hashes.SHA256(),
         )
-        print("Server authentication successful")
+        print(f"{text_color}Server authentication successful")
     except InvalidSignature:
-        print("Server authentication failed")
+        print(f"{text_color}Server authentication failed")
         return False
 
     return True
 
+def get_text_color():
+    print("Please enter your preferred text color (e.g., RED, GREEN, BLUE):")
+    color = input().strip().upper()
+
+    color_map = {
+        "BLACK": Fore.BLACK,
+        "RED": Fore.RED,
+        "GREEN": Fore.GREEN,
+        "YELLOW": Fore.YELLOW,
+        "BLUE": Fore.BLUE,
+        "MAGENTA": Fore.MAGENTA,
+        "CYAN": Fore.CYAN,
+        "WHITE": Fore.WHITE
+    }
+
+    return color_map.get(color, Fore.WHITE)  # Default to WHITE if invalid color
+
 
 def main(args):
-    port = int(args[0]) if len(args) > 0 else 4324
+    init(autoreset=True)
+    text_color = get_text_color()  # Add this line to get the text color
+
+    port = int(args[0]) if len(args) > 0 else 4322
     server_address = args[1] if len(args) > 1 else "localhost"
 
     start_time = time.time()
 
-    print("Establishing connection to server...")
+    print(f"{text_color}Establishing connection to server...")
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((server_address, port))
-        print("Connected")
+        print(f"{text_color}Connected")
 
-        if authentication(s):
+        if authentication(s, text_color):
             while True:
-                filename = input("Enter a filename to send (enter -1 to exit):").strip()
+                filename = input(f"{text_color}Enter a filename to send (enter -1 to exit):").strip()
 
-                if filename == "-1":
+                if filename == f"{text_color}-1":
                     s.sendall(convert_int_to_bytes(2))
                     break
 
                 while not pathlib.Path(filename).is_file():
-                    filename = input("Invalid filename. Please try again:").strip()
+                    filename = input(f"{text_color}Invalid filename. Please try again:").strip()
 
                 filename_bytes = bytes(filename, encoding="utf8")
 
@@ -121,24 +142,24 @@ def main(args):
                 try:
                     with open(filename, mode="rb") as fp:
                         data = fp.read()
-                        print(f"Read {len(data)} bytes from {filename}")
+                        print(f"{text_color}Read {len(data)} bytes from {filename}")
                         public_key = load_server_public_key()
                         encrypted_data = encrypt_data(public_key, data)
                         save_encrypted_file(filename, encrypted_data)
-                        print(f"Encrypted file saved as enc_{pathlib.Path(filename).name}")
+                        print(f"{text_color}Encrypted file saved as enc_{pathlib.Path(filename).name}")
 
                         s.sendall(convert_int_to_bytes(1))
                         s.sendall(convert_int_to_bytes(len(encrypted_data)))
                         s.sendall(encrypted_data)
                 except Exception as e:
-                    print(f"Error processing file {filename}: {e}")
+                    print(f"{text_color}Error processing file {filename}: {e}")
 
             # Close the connection
             s.sendall(convert_int_to_bytes(2))
-            print("Closing connection...")
+            print(f"{text_color}Closing connection...")
 
     end_time = time.time()
-    print(f"Program took {end_time - start_time}s to run.")
+    print(f"{text_color}Program took {end_time - start_time}s to run.")
 
 
 if __name__ == "__main__":
