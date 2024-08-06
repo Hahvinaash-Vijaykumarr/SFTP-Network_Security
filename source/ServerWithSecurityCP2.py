@@ -8,6 +8,9 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
 from cryptography.fernet import Fernet
+from colorama import init, Fore
+
+text_color = Fore.WHITE
 
 def convert_int_to_bytes(x):
     return x.to_bytes(8, "big")
@@ -68,8 +71,31 @@ def save_received_file(filename, data):
     with open(dec_filename, "wb") as file:
         file.write(data)
 
+def get_text_color():
+    print("Please enter your preferred text color (e.g., RED, GREEN, BLUE):")
+    color = input().strip().upper()
+
+    color_map = {
+        "BLACK": Fore.BLACK,
+        "RED": Fore.RED,
+        "GREEN": Fore.GREEN,
+        "YELLOW": Fore.YELLOW,
+        "BLUE": Fore.BLUE,
+        "MAGENTA": Fore.MAGENTA,
+        "CYAN": Fore.CYAN,
+        "WHITE": Fore.WHITE
+    }
+
+    return color_map.get(color, Fore.WHITE)  # Default to WHITE if invalid color
+
 def main(args):
-    port = int(args[0]) if len(args) > 0 else 4324
+    # Initialize colorama
+    init(autoreset=True)
+    
+    # Get text color
+    text_color = get_text_color()
+
+    port = int(args[0]) if len(args) > 0 else 4322
     address = args[1] if len(args) > 1 else "localhost"
 
     try:
@@ -77,29 +103,29 @@ def main(args):
             s.bind((address, port))
             s.listen()
 
-            print(f"Listening on {address}:{port}...")
+            print(f"{text_color}Listening on {address}:{port}...{Fore.RESET}")
             client_socket, client_address = s.accept()
-            print(f"Connection from {client_address}")
+            print(f"{text_color}Connection from {client_address}{Fore.RESET}")
 
             with client_socket:
                 session_key = None
 
                 while True:
                     mode = convert_bytes_to_int(read_bytes(client_socket, 8))
-                    print(f"Received mode: {mode}")
+                    print(f"{text_color}Received mode: {mode}{Fore.RESET}")
 
                     if mode == 0:
-                        print("Receiving file...")
+                        print(f"{text_color}Receiving file...{Fore.RESET}")
                         filename_len = convert_bytes_to_int(read_bytes(client_socket, 8))
                         filename = read_bytes(client_socket, filename_len).decode("utf-8")
-                        print(f"Receiving file: {filename}")
+                        print(f"{text_color}Receiving file: {filename}{Fore.RESET}")
                     elif mode == 1:
                         start_time = time.time()
 
                         file_len = convert_bytes_to_int(read_bytes(client_socket, 8))
-                        print(f"Expecting file length: {file_len}")
+                        print(f"{text_color}Expecting file length: {file_len}{Fore.RESET}")
                         file_data = read_bytes(client_socket, file_len)
-                        print(f"Received file length: {len(file_data)}")
+                        print(f"{text_color}Received file length: {len(file_data)}{Fore.RESET}")
 
                         # Save the encrypted file
                         save_received_encrypted_file(filename, file_data)
@@ -108,11 +134,11 @@ def main(args):
                         if session_key:
                             decrypted_data = decrypt_data_with_key(session_key, file_data)
                             save_received_file(filename, decrypted_data)
-                        
-                        print(f"Finished receiving file {filename} in {time.time() - start_time:.2f}s")
+
+                        print(f"{text_color}Finished receiving file {filename} in {time.time() - start_time:.2f}s{Fore.RESET}")
 
                     elif mode == 2:
-                        print("Client disconnected")
+                        print(f"{text_color}Client disconnected{Fore.RESET}")
                         break
 
                     elif mode == 3:
@@ -141,10 +167,10 @@ def main(args):
                         private_key = load_server_private_key()
                         session_key = decrypt_session_key(private_key, encrypted_session_key)
 
-                        print("Session key received and decrypted")
+                        print(f"{text_color}Session key received and decrypted{Fore.RESET}")
 
     except Exception as e:
-        print(f"Server encountered an error: {e}")
+        print(f"{text_color}Server encountered an error: {e}{Fore.RESET}")
 
 if __name__ == "__main__":
     main(sys.argv[1:])

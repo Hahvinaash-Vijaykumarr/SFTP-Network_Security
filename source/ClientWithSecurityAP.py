@@ -12,7 +12,10 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
+from colorama import init, Fore
 
+# Initialize colorama
+init(autoreset=True)
 
 def convert_int_to_bytes(x):
     """
@@ -20,14 +23,13 @@ def convert_int_to_bytes(x):
     """
     return x.to_bytes(8, "big")
 
-
 def convert_bytes_to_int(xbytes):
     """
     Convenience function to convert byte value to integer value
     """
     return int.from_bytes(xbytes, "big")
 
-def authentication(s):
+def authentication(s, text_color):
     s.sendall(convert_int_to_bytes(3))
     auth_message = b"Client Request SecureStore ID"
     s.sendall(convert_int_to_bytes(len(auth_message)))
@@ -48,9 +50,9 @@ def authentication(s):
             padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
             hashes.SHA256()
         )
-        print("Server authentication successful")
+        print(f"{text_color}Server authentication successful")
     except InvalidSignature:
-        print("Server authentication failed")
+        print(f"{Fore.RED}Server authentication failed")
         return False
     
     return True
@@ -66,29 +68,45 @@ def read_bytes(socket, length):
         bytes_received += len(data)
     return b"".join(buffer)
 
+def get_text_color():
+    print("Please enter your preferred text color (e.g., RED, GREEN, BLUE):")
+    color = input().strip().upper()
 
+    color_map = {
+        "BLACK": Fore.BLACK,
+        "RED": Fore.RED,
+        "GREEN": Fore.GREEN,
+        "YELLOW": Fore.YELLOW,
+        "BLUE": Fore.BLUE,
+        "MAGENTA": Fore.MAGENTA,
+        "CYAN": Fore.CYAN,
+        "WHITE": Fore.WHITE
+    }
+
+    return color_map.get(color, Fore.WHITE)  # Default to WHITE if invalid color
 
 def main(args):
-    port = int(args[0]) if len(args) > 0 else 4321
+    text_color = get_text_color()  # Get text color from user
+
+    port = int(args[0]) if len(args) > 0 else 4322
     server_address = args[1] if len(args) > 1 else "localhost"
 
     start_time = time.time()
 
-    # try:
-    print("Establishing connection to server...")
+    print(f"{text_color}Establishing connection to server...")
     # Connect to server
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((server_address, port))
-        print("Connected")
+        print(f"{text_color}Connected")
 
-        if authentication(s):
+        if authentication(s, text_color):  # Pass text_color to authentication
             while True:
                 filename = input(
-                    "Enter a filename to send (enter -1 to exit):"
+                    f"{text_color}Enter a filename to send (enter -1 to exit):"
                 ).strip()
 
                 while filename != "-1" and (not pathlib.Path(filename).is_file()):
-                    filename = input("Invalid filename. Please try again:").strip()
+                    filename = input(f"{text_color}Invalid filename. Please try again:").strip()
 
                 if filename == "-1":
                     s.sendall(convert_int_to_bytes(2))
@@ -110,11 +128,10 @@ def main(args):
 
             # Close the connection
             s.sendall(convert_int_to_bytes(2))
-            print("Closing connection...")
+            print(f"{text_color}Closing connection...")
 
     end_time = time.time()
-    print(f"Program took {end_time - start_time}s to run.")
-
+    print(f"{text_color}Program took {end_time - start_time}s to run.")
 
 if __name__ == "__main__":
     main(sys.argv[1:])
