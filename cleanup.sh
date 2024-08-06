@@ -1,3 +1,5 @@
+#!/bin/bash
+
 rm -rf ./recv_files
 mkdir ./recv_files
 rm -rf ./send_files_enc
