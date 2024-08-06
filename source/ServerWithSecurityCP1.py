@@ -69,7 +69,7 @@ def save_received_encrypted_file(filename, data):
 
 
 def main(args):
-    port = int(args[0]) if len(args) > 0 else 4322
+    port = int(args[0]) if len(args) > 0 else 4324
     address = args[1] if len(args) > 1 else "localhost"
 
     try:
