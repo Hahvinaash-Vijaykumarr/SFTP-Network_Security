@@ -87,7 +87,13 @@ exit
 **User-Friendly Interface:** The client application prompts users for input in a straightforward manner and allows them to select text colours to:
 1. Tackle colour-blindness.
 2. Allow users to personalise their experience
-**Clear Instructions:** The code provides clear error messages and feedback 
+**Clear Instructions:** The code provides clear error messages and feedback
+
+
+
+
+
+ 
 
 
 
