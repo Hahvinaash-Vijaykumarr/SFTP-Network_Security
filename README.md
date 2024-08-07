@@ -80,7 +80,14 @@ To exit pipenv shell, simply type:
 exit
 ```
 
-Do not forget to spawn the shell again if you'd like to restart the assignment.
+## Sustainability and Inclusivity Considerations
+Sustainability
+Efficient Data Handling: The client compresses files before sending them to reduce bandwidth usage and storage requirements on the server.
+Inclusivity
+User-Friendly Interface: The client application prompts users for input in a straightforward manner and allows them to select text colours to:
+Tackle colour-blindness.
+Allow users to personalise their experience
+Clear Instructions: The code provides clear error messages and feedback 
 
 
 
