@@ -9,6 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
 from cryptography.fernet import Fernet
 from colorama import init, Fore
+import zlib
 
 text_color = Fore.WHITE
 
@@ -133,7 +134,12 @@ def main(args):
                         # Save the decrypted file if session_key exists
                         if session_key:
                             decrypted_data = decrypt_data_with_key(session_key, file_data)
-                            save_received_file(filename, decrypted_data)
+                            decompressed_data = zlib.decompress(decrypted_data)
+                            save_received_file(filename, decompressed_data)
+
+                            print(f"{text_color}Encrypted size: {len(file_data)} bytes{Fore.RESET}")
+                            print(f"{text_color}Decrypted size: {len(decrypted_data)} bytes{Fore.RESET}")
+                            print(f"{text_color}Decompressed size: {len(decompressed_data)} bytes{Fore.RESET}")
 
                         print(f"{text_color}Finished receiving file {filename} in {time.time() - start_time:.2f}s{Fore.RESET}")
 

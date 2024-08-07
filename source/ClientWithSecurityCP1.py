@@ -9,6 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
 import os
 from colorama import init, Fore
+import zlib
 
 def convert_int_to_bytes(x):
     """
@@ -124,7 +125,7 @@ def main(args):
             while True:
                 filename = input(f"{text_color}Enter a filename to send (enter -1 to exit):").strip()
 
-                if filename == f"{text_color}-1":
+                if filename == f"-1":
                     s.sendall(convert_int_to_bytes(2))
                     break
 
@@ -142,11 +143,17 @@ def main(args):
                 try:
                     with open(filename, mode="rb") as fp:
                         data = fp.read()
+
                         print(f"{text_color}Read {len(data)} bytes from {filename}")
+                        
+                        # Compress the data before encryption
+                        compressed_data = zlib.compress(data)
+                        print(f"{text_color}Compressed file size: {len(compressed_data)} bytes")
+                        
                         public_key = load_server_public_key()
-                        encrypted_data = encrypt_data(public_key, data)
+                        encrypted_data = encrypt_data(public_key, compressed_data)
                         save_encrypted_file(filename, encrypted_data)
-                        print(f"{text_color}Encrypted file saved as enc_{pathlib.Path(filename).name}")
+                        print(f"{text_color}Read {len(data)} bytes from {filename}")
 
                         s.sendall(convert_int_to_bytes(1))
                         s.sendall(convert_int_to_bytes(len(encrypted_data)))
