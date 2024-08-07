@@ -4,7 +4,7 @@ This assignment requires knowledge from Network Security and basic knowledge in 
 
 ## Secure FTP != HTTPs
 
-Note that you will be implementing Secure FTP as your own whole new application layer protocol. In NO WAY we are relying on HTTP/s. Please do not confuse the materials, you don't need to know materials in Week 11 and 12 before getting started.
+This project implements a Secure FTP as its own whole new application layer protocol, without relying on HTTP/s in any manner.
 
 ## Running the code
 
@@ -87,6 +87,7 @@ exit
 **User-Friendly Interface:** The client application prompts users for input in a straightforward manner and allows them to select text colours to:
 1. Tackle colour-blindness.
 2. Allow users to personalise their experience
+
 **Clear Instructions:** The code provides clear error messages and feedback
 
 
