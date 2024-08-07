@@ -1,6 +1,6 @@
 # 50.005 Programming Assignment 2
 
-This assignment requires knowledge from Network Security and basic knowledge in Python.
+This project requires knowledge from Network Security and basic knowledge in Python.
 
 ## Secure FTP != HTTPs
 
