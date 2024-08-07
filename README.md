@@ -81,9 +81,9 @@ exit
 ```
 
 # Sustainability and Inclusivity Considerations
-## Sustainability
+### Sustainability
 Efficient Data Handling: The client compresses files before sending them to reduce bandwidth usage and storage requirements on the server.
-## Inclusivity
+### Inclusivity
 User-Friendly Interface: The client application prompts users for input in a straightforward manner and allows them to select text colours to:
 Tackle colour-blindness.
 Allow users to personalise their experience
