@@ -2,6 +2,7 @@ import pathlib
 import socket
 import sys
 import time
+import zlib
 from datetime import datetime
 import secrets
 import traceback
@@ -95,6 +96,19 @@ def main(args):
             client_socket, client_address = s.accept()
             with client_socket:
                 while True:
+                    print(f"{text_color}Client connected")
+
+                    handshake_message = b"Client is pinging the server..."
+                    received_handshake = read_bytes(client_socket, len(handshake_message))
+                    print(f"{text_color}Received handshake message: {received_handshake}")
+
+                    if received_handshake == handshake_message:
+                        print(f"{text_color}Sending handshake acknowledgment...")
+                        client_socket.sendall(handshake_message)
+                    else:
+                        print(f"{Fore.RED}Unexpected handshake message received")
+                        client_socket.close()
+                        return
                     match convert_bytes_to_int(read_bytes(client_socket, 8)):
                         case 0:
                             # If the packet is for transferring the filename
@@ -113,8 +127,14 @@ def main(args):
                             file_len = convert_bytes_to_int(
                                 read_bytes(client_socket, 8)
                             )
-                            file_data = read_bytes(client_socket, file_len)
+                            compressed_data = read_bytes(client_socket, file_len)
                             # print(file_data)
+
+                            print(f"{text_color}Decrypted data size: {len(compressed_data)} bytes")
+
+                            
+                            file_data = zlib.decompress(compressed_data) # decompressing the data to send it over
+                            print(f"{text_color}Decompressed file size: {len(file_data)} bytes")
 
                             filename = "recv_" + filename.split("/")[-1]
 

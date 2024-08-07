@@ -10,6 +10,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
 from signal import signal, SIGINT
 from colorama import init, Fore
+import zlib
 
 text_color = Fore.WHITE
 
@@ -96,7 +97,7 @@ def main(args):
     # Get text color
     text_color = get_text_color()
     
-    port = int(args[0]) if len(args) > 0 else 4324
+    port = int(args[0]) if len(args) > 0 else 4322
     address = args[1] if len(args) > 1 else "localhost"
 
     try:
@@ -127,6 +128,11 @@ def main(args):
 
                             private_key = load_server_private_key()
                             decrypted_data = decrypt_data(private_key, file_data)
+
+                            print(f"{text_color}Decrypted data size: {len(decrypted_data)} bytes")
+
+                            decompressed_data = zlib.decompress(decrypted_data)
+                            print(f"{text_color}Decompressed file size: {len(decompressed_data)} bytes")
 
                             filename = "recv_" + filename.split("/")[-1]
 

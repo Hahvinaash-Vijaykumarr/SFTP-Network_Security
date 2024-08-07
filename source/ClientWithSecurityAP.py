@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 import secrets
 import traceback
-
+import zlib
 from cryptography import x509
 from cryptography.exceptions import InvalidSignature
 from cryptography.fernet import Fernet
@@ -28,6 +28,24 @@ def convert_bytes_to_int(xbytes):
     Convenience function to convert byte value to integer value
     """
     return int.from_bytes(xbytes, "big")
+
+def ping_live_server(s):
+    handshake_message = b"Client is pinging the server..."
+    print(f"Sending handshake message...")
+    s.sendall(handshake_message)
+    
+    try:
+        response = read_bytes(s, len(handshake_message))
+        if response == handshake_message:
+            print(f"Server is live and responded correctly")
+            return True
+        else:
+            print(f"{Fore.RED}Unexpected response from server")
+            return False
+    except Exception as e:
+        print(f"{Fore.RED}Handshake failed: {e}")
+        return False
+
 
 def authentication(s, text_color):
     s.sendall(convert_int_to_bytes(3))
@@ -99,6 +117,9 @@ def main(args):
         s.connect((server_address, port))
         print(f"{text_color}Connected")
 
+        if not ping_live_server(s):  # Add handshake check here
+            return
+
         if authentication(s, text_color):  # Pass text_color to authentication
             while True:
                 filename = input(
@@ -122,10 +143,13 @@ def main(args):
                 # Send the file
                 with open(filename, mode="rb") as fp:
                     data = fp.read()
-                    s.sendall(convert_int_to_bytes(1))
-                    s.sendall(convert_int_to_bytes(len(data)))
-                    s.sendall(data)
+                    print(f"{text_color}Read {len(data)} bytes from {filename}")
+                    compressed_data = zlib.compress(data)
+                    print(f"{text_color}Compressed file size: {len(compressed_data)} bytes")
 
+                    s.sendall(convert_int_to_bytes(1))
+                    s.sendall(convert_int_to_bytes(len(compressed_data)))
+                    s.sendall(compressed_data)
             # Close the connection
             s.sendall(convert_int_to_bytes(2))
             print(f"{text_color}Closing connection...")
